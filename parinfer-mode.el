@@ -12,16 +12,14 @@
         (goto-char old-point))))
 
 (defun parinfer-mode-indent-mode ()
-  (parinfer-mode-insert-result (parinferlib-indent-mode (buffer-string)
-                                                        (current-column)
-                                                        (- (line-number-at-pos) 1)
-                                                        nil)))
+  (let ((options (list :cursor-x (current-column)
+                       :cursor-line (- (line-number-at-pos) 1))))
+    (parinfer-mode-insert-result (parinferlib-indent-mode (buffer-string) options))))
 
 (defun parinfer-mode-paren-mode ()
-  (parinfer-mode-insert-result (parinferlib-paren-mode (buffer-string)
-                                                       (current-column)
-                                                       (- (line-number-at-pos) 1)
-                                                       nil)))
+  (let ((options (list :cursor-x (current-column)
+                       :cursor-line (- (line-number-at-pos) 1))))
+    (parinfer-mode-insert-result (parinferlib-paren-mode (buffer-string) options))))
 
 (define-minor-mode parinfer-mode
   "Uses Parinfer to Format lispy code"
