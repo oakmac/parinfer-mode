@@ -17,12 +17,12 @@ Otherwise, it is a list whose car holds the cursor-dx value to pass to parinferl
 (defun parinfer-mode--replace-line (index newline old-index)
   "Helper function
 Replace line at index with newline, presuming currently we are on oldline"
-  (forward-line (- index (symbol-value old-index))
+  (forward-line (- index (symbol-value old-index)))
   (let ((beg (point))
         (end (progn (move-end-of-line 1) (point))))
     (insert newline)
     (delete-region beg end))
-  (set old-index index)))
+  (set old-index index))
 
 (defun parinfer-mode--result-guard ()
   "Helper function
@@ -38,12 +38,12 @@ All lines that were changed are replaced, then cursor is set toa new position"
     (if (plist-get result :success)
         (if (parinfer-mode--result-guard)
             (let* ((old-line (line-number-at-pos))
-                   (new-lines (plist-get result :changedLines))
-                   (new-line-point (plist-get result :cursorX))
+                   (new-lines (plist-get result :changed-lines))
+                   (new-line-point (plist-get result :cursor-x))
                    (cur-line old-line))
               (mapc (lambda (elem)
-                      (parinfer-mode--replace-line (1+ (aref elem 0))
-                                                   (aref elem 1)
+                      (parinfer-mode--replace-line (1+ (plist-get elem :line-no))
+                                                   (plist-get elem :line)
                                                    'cur-line))
                     new-lines)
               (forward-line (- old-line cur-line))
@@ -73,7 +73,6 @@ All lines that were changed are replaced, then cursor is set toa new position"
   (interactive)
   (let ((options (list :cursor-x (current-column)
                        :cursor-line (1- (line-number-at-pos)))))
-
     (parinfer-mode--insert-result (funcall parinfer-mode--processor
                                            (buffer-string)
                                            options))))
@@ -100,10 +99,12 @@ All lines that were changed are replaced, then cursor is set toa new position"
 (defun parinfer-mode--postprocess-changes ()
   "After command finishes executing, process all changes made there"
   (when parinfer-mode--last-changes
-    (parinfer-mode--insert-result (funcall parinfer-mode--processor (buffer-string)
-                                           (current-column)
-                                           (1- (line-number-at-pos))
-                                           (car parinfer-mode--last-changes)))
+    (let ((options (list :cursor-x (current-column)
+                         :cursor-line (1- (line-number-at-pos))
+                         :cursor-dx (car parinfer-mode--last-changes))))
+      (parinfer-mode--insert-result (funcall parinfer-mode--processor
+                                             (buffer-string)
+                                             options)))
     (setq parinfer-mode--last-changes nil)))
 
 (define-minor-mode parinfer-mode
